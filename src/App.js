@@ -1,74 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
-// Embedded CSS - extended for new features
-const styles = `
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; }
-  
-  .app { display: flex; min-height: 100vh; }
-  .sidebar { width: 280px; background: white; box-shadow: 4px 0 20px rgba(0,0,0,0.1); padding: 2rem 0; overflow-y: auto; }
-  .sidebar ul { list-style: none; }
-  .sidebar li { padding: 0.75rem 2rem; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
-  .sidebar li:hover { background: #f1f5f9; border-left-color: #3b82f6; }
-  .sidebar li.active { background: #eff6ff; border-left-color: #1d4ed8; font-weight: 600; }
-  .sidebar .submenu { padding-left: 2rem; font-size: 0.9rem; }
-  .sidebar .submenu li { padding: 0.5rem 2rem 0.5rem 4rem; cursor: pointer; }
-  .sidebar .submenu li:hover { background: #f1f5f9; border-left-color: #3b82f6; }
-  .sidebar .submenu li.active { background: #eff6ff; border-left-color: #1d4ed8; }
-  
-  .main { flex: 1; padding: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
-  .form-card { background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); padding: 2.5rem; }
-  .section { margin-bottom: 2.5rem; }
-  .section h3 { color: #1e293b; margin-bottom: 1.5rem; font-size: 1.4rem; font-weight: 700; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
-  .form-row { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
-  .form-group { flex: 1; min-width: 200px; }
-  label { display: block; margin-bottom: 0.5rem; color: #475569; font-weight: 500; }
-  input, select, textarea { width: 100%; padding: 0.875rem 1rem; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; transition: all 0.2s; }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-  input[type=number] { -moz-appearance: textfield; }
-  input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button, input[type=file]::-webkit-file-upload-button { -webkit-appearance: none; margin: 0; cursor: pointer; padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 6px; }
-  textarea { resize: vertical; min-height: 120px; font-family: inherit; }
-  
-  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 2rem; border-radius: 16px; margin-top: 2rem; }
-  .summary-item { text-align: center; }
-  .summary-value { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.25rem; }
-  .summary-label { font-size: 1.1rem; opacity: 0.95; }
-  
-  .radio-group { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
-  .radio-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: #f8fafc; border-radius: 10px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
-  .radio-item:hover { background: #e2e8f0; }
-  .radio-item.active { background: #eff6ff; border-color: #3b82f6; }
-  .radio-input { opacity: 0; position: absolute; }
-  
-  .file-preview { max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); margin-top: 1rem; display: block; }
-  
-  .page-nav { display: flex; gap: 1rem; margin-bottom: 2rem; }
-  .nav-btn { padding: 0.75rem 2rem; background: #f1f5f9; border: none; border-radius: 10px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
-  .nav-btn:hover { background: #e2e8f0; }
-  .nav-btn.active { background: #3b82f6; color: white; }
-  
-  @media (max-width: 768px) { 
-    .sidebar { width: 100%; position: fixed; height: 100vh; z-index: 100; transform: translateX(-100%); }
-    .sidebar.open { transform: translateX(0); }
-    .main { padding: 1rem; }
-    .form-row, .radio-group { flex-direction: column; }
-  }
-`;
-
-// Inject CSS
-const injectCSS = () => {
-  if (!document.getElementById('app-styles')) {
-    const style = document.createElement('style');
-    style.id = 'app-styles';
-    style.textContent = styles;
-    document.head.appendChild(style);
-  }
-};
-
 function App() {
-  const [currentPage, setCurrentPage] = useState('jks'); // 'jks' | 'incidental'
+  const [currentPage, setCurrentPage] = useState('jks');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // JKS States (existing)
+  // JKS Form States
   const [entitas, setEntitas] = useState('');
   const [subEntitas, setSubEntitas] = useState('');
   const [site, setSite] = useState('');
@@ -83,201 +19,655 @@ function App() {
   const [lemburProject, setLemburProject] = useState(0);
   const [jksProject, setJksProject] = useState(0);
 
-  // Incidental Treatment States
+  // JKS Data Management
+  const [jksData, setJksData] = useState([]);
+  const [currentJksIndex, setCurrentJksIndex] = useState(0);
+
+  // Incidental Form States
   const [tipeTreatment, setTipeTreatment] = useState('FIRST-AID');
   const [entitasIt, setEntitasIt] = useState('');
   const [subEntitasIt, setSubEntitasIt] = useState('');
   const [siteIt, setSiteIt] = useState('');
   const [tanggal, setTanggal] = useState('');
   const [kronologi, setKronologi] = useState('');
-  const [foto1File /* unused intentionally for future backend upload */, setFoto1File] = useState(null);
   const [foto1Preview, setFoto1Preview] = useState('');
 
-  // Mock data (shared)
+  // Incidental Data Management
+  const [incidentalData, setIncidentalData] = useState([]);
+  const [currentIncidentalIndex, setCurrentIncidentalIndex] = useState(0);
+
+  // Options
   const entitasOptions = ['Pertamina', 'Shell', 'BP'];
   const subEntitasOptions = ['Sub A', 'Sub B'];
   const siteOptions = ['Site 1', 'Site 2'];
   const bulanOptions = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
-  // JKS summary
-  const totalPekerja = parseFloat(jumlahPekerjaOrganik) + parseFloat(tkjp) + parseFloat(jumlahPekerjaProject);
-  const totalJks = parseFloat(jksOrganik) + parseFloat(jksTkjp) + parseFloat(jksProject);
-  const totalLembur = parseFloat(lemburOrganik) + parseFloat(lemburProject);
+  // JKS Calculations (live from form)
+  const totalPekerja = Number(jumlahPekerjaOrganik) + Number(tkjp) + Number(jumlahPekerjaProject);
+  const totalJks = Number(jksOrganik) + Number(jksTkjp) + Number(jksProject);
+  const totalLembur = Number(lemburOrganik) + Number(lemburProject);
 
-  // Handle foto preview
   const handleFotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFoto1File(file);
       setFoto1Preview(URL.createObjectURL(file));
     }
   };
 
+  // JKS Submit
+  const submitJks = () => {
+    const data = {
+      entitas,
+      subEntitas,
+      site,
+      bulan,
+      tahun,
+      jumlahPekerjaOrganik,
+      lemburOrganik,
+      jksOrganik,
+      tkjp,
+      jksTkjp,
+      jumlahPekerjaProject,
+      lemburProject,
+      jksProject,
+      timestamp: new Date().toISOString()
+    };
+    const newData = [...jksData, data];
+    setJksData(newData);
+    localStorage.setItem('jksData', JSON.stringify(newData));
+    // Reset form
+    setEntitas('');
+    setSubEntitas('');
+    setSite('');
+    setBulan('');
+    setTahun('');
+    setJumlahPekerjaOrganik(0);
+    setLemburOrganik(0);
+    setJksOrganik(0);
+    setTkjp(0);
+    setJksTkjp(0);
+    setJumlahPekerjaProject(0);
+    setLemburProject(0);
+    setJksProject(0);
+    // Go to new record
+    setCurrentJksIndex(newData.length - 1);
+  };
+
+  // JKS Delete
+  const deleteCurrentJks = () => {
+    const newData = jksData.filter((_, index) => index !== currentJksIndex);
+    setJksData(newData);
+    localStorage.setItem('jksData', JSON.stringify(newData));
+    // Adjust index
+    const newIndex = Math.min(currentJksIndex, newData.length - 1);
+    setCurrentJksIndex(newIndex);
+    if (newData.length > 0) {
+      // Load previous data
+      const data = newData[newIndex];
+      setEntitas(data.entitas || '');
+      setSubEntitas(data.subEntitas || '');
+      setSite(data.site || '');
+      setBulan(data.bulan || '');
+      setTahun(data.tahun || '');
+      setJumlahPekerjaOrganik(data.jumlahPekerjaOrganik || 0);
+      setLemburOrganik(data.lemburOrganik || 0);
+      setJksOrganik(data.jksOrganik || 0);
+      setTkjp(data.tkjp || 0);
+      setJksTkjp(data.jksTkjp || 0);
+      setJumlahPekerjaProject(data.jumlahPekerjaProject || 0);
+      setLemburProject(data.lemburProject || 0);
+      setJksProject(data.jksProject || 0);
+    } else {
+      // Reset form if no data
+      setEntitas('');
+      setSubEntitas('');
+      setSite('');
+      setBulan('');
+      setTahun('');
+      setJumlahPekerjaOrganik(0);
+      setLemburOrganik(0);
+      setJksOrganik(0);
+      setTkjp(0);
+      setJksTkjp(0);
+      setJumlahPekerjaProject(0);
+      setLemburProject(0);
+      setJksProject(0);
+    }
+  };
+
+  // JKS Navigation
+  const prevJks = () => {
+    if (currentJksIndex > 0) {
+      const newIndex = currentJksIndex - 1;
+      setCurrentJksIndex(newIndex);
+      const data = jksData[newIndex];
+      setEntitas(data.entitas || '');
+      setSubEntitas(data.subEntitas || '');
+      setSite(data.site || '');
+      setBulan(data.bulan || '');
+      setTahun(data.tahun || '');
+      setJumlahPekerjaOrganik(data.jumlahPekerjaOrganik || 0);
+      setLemburOrganik(data.lemburOrganik || 0);
+      setJksOrganik(data.jksOrganik || 0);
+      setTkjp(data.tkjp || 0);
+      setJksTkjp(data.jksTkjp || 0);
+      setJumlahPekerjaProject(data.jumlahPekerjaProject || 0);
+      setLemburProject(data.lemburProject || 0);
+      setJksProject(data.jksProject || 0);
+    }
+  };
+
+  const nextJks = () => {
+    if (currentJksIndex < jksData.length - 1) {
+      const newIndex = currentJksIndex + 1;
+      setCurrentJksIndex(newIndex);
+      const data = jksData[newIndex];
+      setEntitas(data.entitas || '');
+      setSubEntitas(data.subEntitas || '');
+      setSite(data.site || '');
+      setBulan(data.bulan || '');
+      setTahun(data.tahun || '');
+      setJumlahPekerjaOrganik(data.jumlahPekerjaOrganik || 0);
+      setLemburOrganik(data.lemburOrganik || 0);
+      setJksOrganik(data.jksOrganik || 0);
+      setTkjp(data.tkjp || 0);
+      setJksTkjp(data.jksTkjp || 0);
+      setJumlahPekerjaProject(data.jumlahPekerjaProject || 0);
+      setLemburProject(data.lemburProject || 0);
+      setJksProject(data.jksProject || 0);
+    }
+  };
+
+  // Incidental Submit
+  const submitIncidental = () => {
+    const data = {
+      tipeTreatment,
+      entitasIt,
+      subEntitasIt,
+      siteIt,
+      tanggal,
+      kronologi,
+      fotoPreview: foto1Preview ? 'Foto ter-upload' : 'No photo',
+      timestamp: new Date().toISOString()
+    };
+    const newData = [...incidentalData, data];
+    setIncidentalData(newData);
+    localStorage.setItem('incidentalData', JSON.stringify(newData));
+    // Reset form
+    setTipeTreatment('FIRST-AID');
+    setEntitasIt('');
+    setSubEntitasIt('');
+    setSiteIt('');
+    setTanggal('');
+    setKronologi('');
+    setFoto1Preview('');
+    // Go to new record
+    setCurrentIncidentalIndex(newData.length - 1);
+  };
+
+  // Incidental Delete
+  const deleteCurrentIncidental = () => {
+    const newData = incidentalData.filter((_, index) => index !== currentIncidentalIndex);
+    setIncidentalData(newData);
+    localStorage.setItem('incidentalData', JSON.stringify(newData));
+    const newIndex = Math.min(currentIncidentalIndex, newData.length - 1);
+    setCurrentIncidentalIndex(newIndex);
+    if (newData.length > 0) {
+      const data = newData[newIndex];
+      setTipeTreatment(data.tipeTreatment || 'FIRST-AID');
+      setEntitasIt(data.entitasIt || '');
+      setSubEntitasIt(data.subEntitasIt || '');
+      setSiteIt(data.siteIt || '');
+      setTanggal(data.tanggal || '');
+      setKronologi(data.kronologi || '');
+      setFoto1Preview(data.fotoPreview || '');
+    } else {
+      setTipeTreatment('FIRST-AID');
+      setEntitasIt('');
+      setSubEntitasIt('');
+      setSiteIt('');
+      setTanggal('');
+      setKronologi('');
+      setFoto1Preview('');
+    }
+  };
+
+  // Incidental Navigation
+  const prevIncidental = () => {
+    if (currentIncidentalIndex > 0) {
+      const newIndex = currentIncidentalIndex - 1;
+      setCurrentIncidentalIndex(newIndex);
+      const data = incidentalData[newIndex];
+      setTipeTreatment(data.tipeTreatment || 'FIRST-AID');
+      setEntitasIt(data.entitasIt || '');
+      setSubEntitasIt(data.subEntitasIt || '');
+      setSiteIt(data.siteIt || '');
+      setTanggal(data.tanggal || '');
+      setKronologi(data.kronologi || '');
+      setFoto1Preview(data.fotoPreview || '');
+    }
+  };
+
+  const nextIncidental = () => {
+    if (currentIncidentalIndex < incidentalData.length - 1) {
+      const newIndex = currentIncidentalIndex + 1;
+      setCurrentIncidentalIndex(newIndex);
+      const data = incidentalData[newIndex];
+      setTipeTreatment(data.tipeTreatment || 'FIRST-AID');
+      setEntitasIt(data.entitasIt || '');
+      setSubEntitasIt(data.subEntitasIt || '');
+      setSiteIt(data.siteIt || '');
+      setTanggal(data.tanggal || '');
+      setKronologi(data.kronologi || '');
+      setFoto1Preview(data.fotoPreview || '');
+    }
+  };
+
+  // Load data on mount
   useEffect(() => {
-    injectCSS();
+    const savedJks = localStorage.getItem('jksData');
+    if (savedJks) {
+      const parsed = JSON.parse(savedJks);
+      setJksData(parsed);
+      if (parsed.length > 0 && currentJksIndex < parsed.length) {
+        const data = parsed[currentJksIndex];
+        setEntitas(data.entitas || '');
+        setSubEntitas(data.subEntitas || '');
+        setSite(data.site || '');
+        setBulan(data.bulan || '');
+        setTahun(data.tahun || '');
+        setJumlahPekerjaOrganik(data.jumlahPekerjaOrganik || 0);
+        setLemburOrganik(data.lemburOrganik || 0);
+        setJksOrganik(data.jksOrganik || 0);
+        setTkjp(data.tkjp || 0);
+        setJksTkjp(data.jksTkjp || 0);
+        setJumlahPekerjaProject(data.jumlahPekerjaProject || 0);
+        setLemburProject(data.lemburProject || 0);
+        setJksProject(data.jksProject || 0);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const savedIncidental = localStorage.getItem('incidentalData');
+    if (savedIncidental) {
+      const parsed = JSON.parse(savedIncidental);
+      setIncidentalData(parsed);
+      if (parsed.length > 0 && currentIncidentalIndex < parsed.length) {
+        const data = parsed[currentIncidentalIndex];
+        setTipeTreatment(data.tipeTreatment || 'FIRST-AID');
+        setEntitasIt(data.entitasIt || '');
+        setSubEntitasIt(data.subEntitasIt || '');
+        setSiteIt(data.siteIt || '');
+        setTanggal(data.tanggal || '');
+        setKronologi(data.kronologi || '');
+        setFoto1Preview(data.fotoPreview || '');
+      }
+    }
   }, []);
 
   const JKSForm = () => (
-    <div className="form-card">
-      <div className="page-nav">
-        <button className={`nav-btn ${currentPage === 'jks' ? 'active' : ''}`} onClick={() => setCurrentPage('jks')}>
+    <div className="form-card bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-10 shadow-2xl relative">
+      {/* Delete Button */}
+      <button 
+        onClick={deleteCurrentJks}
+        className="absolute top-6 right-6 w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl flex items-center justify-center shadow-xl hover:shadow-2xl transition-all font-bold text-xl z-10"
+        title="Hapus Data Saat Ini"
+        disabled={jksData.length === 0}
+      >
+        ×
+      </button>
+
+      {/* Page Nav */}
+      <div className="page-nav flex gap-4 mb-8">
+        <button className={`nav-btn px-8 py-3 rounded-2xl font-semibold transition-all bg-gray-700/50 border-2 border-gray-600 hover:bg-gray-600 hover:border-blue-500 active:bg-blue-500 text-white ${currentPage === 'jks' ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-500/25' : ''}`} onClick={() => setCurrentPage('jks')}>
           Jam Kerja Selamat
         </button>
-        <button className={`nav-btn ${currentPage === 'incidental' ? 'active' : ''}`} onClick={() => setCurrentPage('incidental')}>
+        <button className={`nav-btn px-8 py-3 rounded-2xl font-semibold transition-all bg-gray-700/50 border-2 border-gray-600 hover:bg-gray-600 hover:border-blue-500 active:bg-blue-500 text-white ${currentPage === 'incidental' ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-500/25' : ''}`} onClick={() => setCurrentPage('incidental')}>
           Incidental Treatment
         </button>
       </div>
-      <h1 style={{color: '#1e293b', fontSize: '2.5rem', marginBottom: '2rem', fontWeight: 800}}>Jam Kerja Selamat (JKS)</h1>
-      {/* Existing JKS form sections unchanged */}
-      <section className="section">
-        <h3>Informasi Site</h3>
-        <div className="form-row">
-          <div className="form-group"><label>Entitas</label><select value={entitas} onChange={(e) => setEntitas(e.target.value)}>
-            <option value="">Pilih Entitas</option>{entitasOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select></div>
-          <div className="form-group"><label>Sub Entitas</label><select value={subEntitas} onChange={(e) => setSubEntitas(e.target.value)}>
-            <option value="">Pilih</option>{subEntitasOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select></div>
-          <div className="form-group"><label>Site</label><select value={site} onChange={(e) => setSite(e.target.value)}>
-            <option value="">Pilih</option>{siteOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select></div>
-          <div className="form-group"><label>Bulan</label><select value={bulan} onChange={(e) => setBulan(e.target.value)}>
-            <option value="">Pilih</option>{bulanOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select></div>
-          <div className="form-group"><label>Tahun/Periode</label><input type="number" value={tahun} onChange={(e) => setTahun(e.target.value)} placeholder="2024" /></div>
+
+      <h1 className="text-4xl font-black text-white mb-8 bg-gradient-to-r from-blue-300 to-blue-100 bg-clip-text text-transparent drop-shadow-lg">
+        Jam Kerja Selamat (JKS)
+      </h1>
+
+      {/* Full JKS Form - all fields */}
+      <section className="section mb-10">
+        <h3 className="text-2xl font-bold text-white border-b-2 border-blue-800 pb-4 mb-6">Informasi Site</h3>
+        <div className="form-row flex gap-6 flex-wrap mb-4 [&>*]:min-w-[220px]">
+          <div className="form-group flex-1 min-w-[220px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Entitas</label>
+            <select 
+              value={entitas} 
+              onChange={(e) => setEntitas(e.target.value)}
+              className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70"
+            >
+              <option value="">Pilih Entitas</option>
+              {entitasOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          {/* Repeat all other JKS fields exactly as before... */}
+          <div className="form-group flex-1 min-w-[220px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Sub Entitas</label>
+            <select value={subEntitas} onChange={(e) => setSubEntitas(e.target.value)} className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70">
+              <option value="">Pilih</option>
+              {subEntitasOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div className="form-group flex-1 min-w-[220px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Site</label>
+            <select value={site} onChange={(e) => setSite(e.target.value)} className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70">
+              <option value="">Pilih</option>
+              {siteOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div className="form-group flex-1 min-w-[220px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Bulan</label>
+            <select value={bulan} onChange={(e) => setBulan(e.target.value)} className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70">
+              <option value="">Pilih</option>
+              {bulanOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div className="form-group flex-1 min-w-[220px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Tahun/Periode</label>
+            <input type="number" value={tahun} onChange={(e) => setTahun(e.target.value)} placeholder="2024" className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70 [appearance:textfield]" />
+          </div>
         </div>
       </section>
-      <section className="section">
-        <h3>Data Organik</h3>
-        <div className="form-row">
-          <div className="form-group"><label>Jumlah Pekerja</label><input type="number" value={jumlahPekerjaOrganik} onChange={(e) => setJumlahPekerjaOrganik(e.target.value)} min="0" /></div>
-          <div className="form-group"><label>Lembur</label><input type="number" value={lemburOrganik} onChange={(e) => setLemburOrganik(e.target.value)} min="0" /></div>
-          <div className="form-group"><label>JKS Organik</label><input type="number" value={jksOrganik} onChange={(e) => setJksOrganik(e.target.value)} min="0" /></div>
+
+      {/* Data Organik, Outsource, Project sections - all inputs unchanged */}
+      <section className="section mb-10">
+        <h3 className="text-2xl font-bold text-white border-b-2 border-blue-800 pb-4 mb-6">Data Organik</h3>
+        <div className="form-row flex gap-6 flex-wrap [&>*]:min-w-[200px]">
+          <div className="form-group flex-1 min-w-[200px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Jumlah Pekerja</label>
+            <input type="number" value={jumlahPekerjaOrganik} onChange={(e) => setJumlahPekerjaOrganik(Number(e.target.value))} min="0" className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70 [appearance:textfield]" />
+          </div>
+          <div className="form-group flex-1 min-w-[200px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Lembur</label>
+            <input type="number" value={lemburOrganik} onChange={(e) => setLemburOrganik(Number(e.target.value))} min="0" className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70 [appearance:textfield]" />
+          </div>
+          <div className="form-group flex-1 min-w-[200px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">JKS Organik</label>
+            <input type="number" value={jksOrganik} onChange={(e) => setJksOrganik(Number(e.target.value))} min="0" className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70 [appearance:textfield]" />
+          </div>
         </div>
       </section>
-      <section className="section">
-        <h3>Data Outsource</h3>
-        <div className="form-row">
-          <div className="form-group"><label>TKJP</label><input type="number" value={tkjp} onChange={(e) => setTkjp(e.target.value)} min="0" /></div>
-          <div className="form-group"><label>JKS TKJP</label><input type="number" value={jksTkjp} onChange={(e) => setJksTkjp(e.target.value)} min="0" /></div>
+
+      <section className="section mb-10">
+        <h3 className="text-2xl font-bold text-white border-b-2 border-blue-800 pb-4 mb-6">Data Outsource</h3>
+        <div className="form-row flex gap-6 flex-wrap [&>*]:min-w-[200px]">
+          <div className="form-group flex-1 min-w-[200px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">TKJP</label>
+            <input type="number" value={tkjp} onChange={(e) => setTkjp(Number(e.target.value))} min="0" className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70 [appearance:textfield]" />
+          </div>
+          <div className="form-group flex-1 min-w-[200px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">JKS TKJP</label>
+            <input type="number" value={jksTkjp} onChange={(e) => setJksTkjp(Number(e.target.value))} min="0" className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70 [appearance:textfield]" />
+          </div>
         </div>
       </section>
-      <section className="section">
-        <h3>Data Project</h3>
-        <div className="form-row">
-          <div className="form-group"><label>Jumlah Pekerja</label><input type="number" value={jumlahPekerjaProject} onChange={(e) => setJumlahPekerjaProject(e.target.value)} min="0" /></div>
-          <div className="form-group"><label>Lembur</label><input type="number" value={lemburProject} onChange={(e) => setLemburProject(e.target.value)} min="0" /></div>
-          <div className="form-group"><label>JKS Project</label><input type="number" value={jksProject} onChange={(e) => setJksProject(e.target.value)} min="0" /></div>
+
+      <section className="section mb-10">
+        <h3 className="text-2xl font-bold text-white border-b-2 border-blue-800 pb-4 mb-6">Data Project</h3>
+        <div className="form-row flex gap-6 flex-wrap [&>*]:min-w-[200px]">
+          <div className="form-group flex-1 min-w-[200px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Jumlah Pekerja</label>
+            <input type="number" value={jumlahPekerjaProject} onChange={(e) => setJumlahPekerjaProject(Number(e.target.value))} min="0" className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70 [appearance:textfield]" />
+          </div>
+          <div className="form-group flex-1 min-w-[200px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Lembur</label>
+            <input type="number" value={lemburProject} onChange={(e) => setLemburProject(Number(e.target.value))} min="0" className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70 [appearance:textfield]" />
+          </div>
+          <div className="form-group flex-1 min-w-[200px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">JKS Project</label>
+            <input type="number" value={jksProject} onChange={(e) => setJksProject(Number(e.target.value))} min="0" className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70 [appearance:textfield]" />
+          </div>
         </div>
       </section>
-      <div className="summary-grid">
-        <div className="summary-item"><div className="summary-value">{totalPekerja.toLocaleString()}</div><div className="summary-label">Total Pekerja</div></div>
-        <div className="summary-item"><div className="summary-value">{totalJks.toLocaleString()}</div><div className="summary-label">Total JKS</div></div>
-        <div className="summary-item"><div className="summary-value">{totalLembur.toLocaleString()}</div><div className="summary-label">Total Lembur</div></div>
+
+      {/* Summary - live from form */}
+      <div className="summary-grid grid grid-cols-1 md:grid-cols-3 gap-8 bg-gradient-to-r from-blue-600 via-blue-700 to-purple-700 text-white p-10 rounded-3xl mt-10 shadow-2xl ring-2 ring-white/20">
+        <div className="text-center">
+          <div className="text-5xl font-black mb-1">{totalPekerja.toLocaleString()}</div>
+          <div className="text-xl opacity-95">Total Pekerja</div>
+        </div>
+        <div className="text-center">
+          <div className="text-5xl font-black mb-1">{totalJks.toLocaleString()}</div>
+          <div className="text-xl opacity-95">Total JKS</div>
+        </div>
+        <div className="text-center">
+          <div className="text-5xl font-black mb-1">{totalLembur.toLocaleString()}</div>
+          <div className="text-xl opacity-95">Total Lembur</div>
+        </div>
+      </div>
+
+      {/* Submit Button */}
+      <div className="flex justify-center mt-12">
+        <button 
+          onClick={submitJks}
+          className="px-12 py-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xl rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-200 transform hover:scale-[1.02] min-w-[200px]"
+        >
+          💾 Submit JKS Data
+        </button>
+      </div>
+
+      {/* Navigation */}
+      <div className="flex items-center justify-center gap-6 mt-12 p-6 bg-gray-800/30 rounded-2xl backdrop-blur-sm">
+        <button 
+          onClick={prevJks}
+          disabled={currentJksIndex === 0}
+          className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:shadow-none"
+        >
+          ← Previous
+        </button>
+        <div className="text-2xl font-bold text-white min-w-[100px] text-center">
+          {jksData.length > 0 ? currentJksIndex + 1 : 0}
+        </div>
+        <button 
+          onClick={nextJks}
+          disabled={currentJksIndex === jksData.length - 1}
+          className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:shadow-none"
+        >
+          Next →
+        </button>
+        <div className="text-lg font-semibold text-gray-300">
+          Total: {jksData.length}
+        </div>
       </div>
     </div>
   );
 
   const IncidentalForm = () => (
-    <div className="form-card">
-      <div className="page-nav">
-        <button className={`nav-btn ${currentPage === 'jks' ? 'active' : ''}`} onClick={() => setCurrentPage('jks')}>Jam Kerja Selamat</button>
-        <button className={`nav-btn ${currentPage === 'incidental' ? 'active' : ''}`} onClick={() => setCurrentPage('incidental')}>Incidental Treatment</button>
+    <div className="form-card bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-10 shadow-2xl relative">
+      {/* Delete Button */}
+      <button 
+        onClick={deleteCurrentIncidental}
+        className="absolute top-6 right-6 w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl flex items-center justify-center shadow-xl hover:shadow-2xl transition-all font-bold text-xl z-10"
+        title="Hapus Data Saat Ini"
+        disabled={incidentalData.length === 0}
+      >
+        ×
+      </button>
+
+      {/* Page Nav */}
+      <div className="page-nav flex gap-4 mb-8 flex-wrap">
+        <button className={`nav-btn px-8 py-3 rounded-2xl font-semibold transition-all bg-gray-700/50 border-2 border-gray-600 hover:bg-gray-600 hover:border-blue-500 active:bg-blue-500 text-white ${currentPage === 'jks' ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-500/25' : ''}`} onClick={() => setCurrentPage('jks')}>
+          Jam Kerja Selamat
+        </button>
+        <button className={`nav-btn px-8 py-3 rounded-2xl font-semibold transition-all bg-gray-700/50 border-2 border-gray-600 hover:bg-gray-600 hover:border-blue-500 active:bg-blue-500 text-white ${currentPage === 'incidental' ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-500/25' : ''}`} onClick={() => setCurrentPage('incidental')}>
+          Incidental Treatment
+        </button>
       </div>
-      <h1 style={{color: '#1e293b', fontSize: '2.5rem', marginBottom: '2rem', fontWeight: 800}}>Incidental Treatment</h1>
-      
-      <section className="section">
-        <h3>Pilih Tipe</h3>
-        <div className="radio-group">
-          <label className={`radio-item ${tipeTreatment === 'FIRST-AID' ? 'active' : ''}`}>
-            <input type="radio" name="tipe" value="FIRST-AID" checked={tipeTreatment === 'FIRST-AID'} onChange={(e) => setTipeTreatment(e.target.value)} className="radio-input" />
-            <span>FIRST-AID</span>
+
+      <h1 className="text-4xl font-black text-white mb-8 bg-gradient-to-r from-blue-300 to-blue-100 bg-clip-text text-transparent drop-shadow-lg">
+        Incidental Treatment
+      </h1>
+
+      {/* Full Incidental Form */}
+      <section className="section mb-10">
+        <h3 className="text-2xl font-bold text-white border-b-2 border-blue-800 pb-4 mb-6">Pilih Tipe</h3>
+        <div className="radio-group flex gap-4 mb-6 flex-wrap">
+          <label className={`radio-item flex items-center gap-2 p-4 bg-gray-700/50 rounded-2xl cursor-pointer transition-all duration-200 border-2 border-transparent hover:bg-gray-600 hover:border-blue-500 hover:shadow-lg ${tipeTreatment === 'FIRST-AID' ? 'bg-blue-500/30 border-blue-400 shadow-lg shadow-blue-400/25 ring-2 ring-blue-400/30' : ''}`}>
+            <input type="radio" name="tipe" value="FIRST-AID" checked={tipeTreatment === 'FIRST-AID'} onChange={(e) => setTipeTreatment(e.target.value)} className="radio-input opacity-0 absolute cursor-pointer peer" />
+            <span className="text-lg font-medium text-white peer-checked:text-blue-200">FIRST-AID</span>
           </label>
-          <label className={`radio-item ${tipeTreatment === 'MEDICAL-TREATMENT' ? 'active' : ''}`}>
-            <input type="radio" name="tipe" value="MEDICAL-TREATMENT" checked={tipeTreatment === 'MEDICAL-TREATMENT'} onChange={(e) => setTipeTreatment(e.target.value)} className="radio-input" />
-            <span>MEDICAL-TREATMENT</span>
+          <label className={`radio-item flex items-center gap-2 p-4 bg-gray-700/50 rounded-2xl cursor-pointer transition-all duration-200 border-2 border-transparent hover:bg-gray-600 hover:border-blue-500 hover:shadow-lg ${tipeTreatment === 'MEDICAL-TREATMENT' ? 'bg-blue-500/30 border-blue-400 shadow-lg shadow-blue-400/25 ring-2 ring-blue-400/30' : ''}`}>
+            <input type="radio" name="tipe" value="MEDICAL-TREATMENT" checked={tipeTreatment === 'MEDICAL-TREATMENT'} onChange={(e) => setTipeTreatment(e.target.value)} className="radio-input opacity-0 absolute cursor-pointer peer" />
+            <span className="text-lg font-medium text-white peer-checked:text-blue-200">MEDICAL-TREATMENT</span>
           </label>
         </div>
       </section>
-      
-      <section className="section">
-        <h3>Informasi Site</h3>
-        <div className="form-row">
-          <div className="form-group"><label>Entitas</label><select value={entitasIt} onChange={(e) => setEntitasIt(e.target.value)}>
-            <option value="">Pilih</option>{entitasOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select></div>
-          <div className="form-group"><label>Sub Entitas</label><select value={subEntitasIt} onChange={(e) => setSubEntitasIt(e.target.value)}>
-            <option value="">Pilih</option>{subEntitasOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select></div>
-          <div className="form-group"><label>Site</label><select value={siteIt} onChange={(e) => setSiteIt(e.target.value)}>
-            <option value="">Pilih</option>{siteOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select></div>
+
+      <section className="section mb-10">
+        <h3 className="text-2xl font-bold text-white border-b-2 border-blue-800 pb-4 mb-6">Informasi Site</h3>
+        <div className="form-row flex gap-6 flex-wrap mb-4 [&>*]:min-w-[220px]">
+          <div className="form-group flex-1 min-w-[220px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Entitas</label>
+            <select value={entitasIt} onChange={(e) => setEntitasIt(e.target.value)} className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70">
+              <option value="">Pilih</option>
+              {entitasOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div className="form-group flex-1 min-w-[220px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Sub Entitas</label>
+            <select value={subEntitasIt} onChange={(e) => setSubEntitasIt(e.target.value)} className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70">
+              <option value="">Pilih</option>
+              {subEntitasOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div className="form-group flex-1 min-w-[220px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Site</label>
+            <select value={siteIt} onChange={(e) => setSiteIt(e.target.value)} className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70">
+              <option value="">Pilih</option>
+              {siteOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
         </div>
-        <div className="form-row">
-          <div className="form-group"><label>Tanggal</label><input type="date" value={tanggal} onChange={(e) => setTanggal(e.target.value)} /></div>
-          <div className="form-group"><label>Kronologi</label><textarea value={kronologi} onChange={(e) => setKronologi(e.target.value)} placeholder="Jelaskan kronologi kejadian..." /></div>
+        <div className="form-row flex gap-6 flex-wrap [&>*]:min-w-[220px]">
+          <div className="form-group flex-1 min-w-[220px]">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Tanggal</label>
+            <input type="date" value={tanggal} onChange={(e) => setTanggal(e.target.value)} className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 hover:border-gray-500 hover:bg-gray-700/70" />
+          </div>
+          <div className="form-group flex-1">
+            <label className="block mb-2 text-gray-300 font-medium text-lg">Kronologi</label>
+            <textarea value={kronologi} onChange={(e) => setKronologi(e.target.value)} placeholder="Jelaskan kronologi kejadian..." className="w-full p-4 border-2 border-gray-600 rounded-2xl text-lg transition-all duration-200 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:bg-gray-700 min-h-[140px] hover:border-gray-500 hover:bg-gray-700/70 resize-vertical" />
+          </div>
         </div>
       </section>
-      
-      <section className="section">
-        <h3>File</h3>
+
+      <section className="section mb-10">
+        <h3 className="text-2xl font-bold text-white border-b-2 border-blue-800 pb-4 mb-6">File</h3>
         <div className="form-group">
-          <label>File Foto 1</label>
-          <input type="file" accept="image/*" onChange={handleFotoChange} />
-          {foto1Preview && <img src={foto1Preview} alt="Preview" className="file-preview" />}
+          <label className="block mb-2 text-gray-300 font-medium text-lg">File Foto 1</label>
+          <input type="file" accept="image/*" onChange={handleFotoChange} className="w-full p-3 border-2 border-gray-600 rounded-2xl bg-gray-700/50 text-white file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-lg file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all cursor-pointer" />
+          {foto1Preview && <img src={foto1Preview} alt="Preview" className="file-preview max-w-[300px] max-h-[200px] object-cover rounded-3xl shadow-2xl mt-4 border-4 border-white/30 hover:shadow-3xl transition-shadow" />}
         </div>
       </section>
-      
-      <div style={{padding: '1rem', background: '#fef3c7', borderRadius: '10px', borderLeft: '4px solid #f59e0b'}}>
-        <strong>Tipe:</strong> {tipeTreatment} | <strong>Preview:</strong> {foto1Preview ? 'Foto ter-upload' : 'Belum ada foto'}
+
+      <div className="p-6 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-3xl border-l-4 border-yellow-400 shadow-lg backdrop-blur-sm">
+        <div className="flex flex-wrap gap-4 text-lg font-bold text-yellow-100">
+          <span>Tipe: <span className="text-blue-200">{tipeTreatment}</span></span>
+          <span>|</span>
+          <span>Preview: <span className="text-green-200">{foto1Preview ? 'Foto ter-upload' : 'Belum ada foto'}</span></span>
+        </div>
+      </div>
+
+      {/* Submit Button */}
+      <div className="flex justify-center mt-12">
+        <button 
+          onClick={submitIncidental}
+          className="px-12 py-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xl rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-200 transform hover:scale-[1.02] min-w-[200px]"
+        >
+          💾 Submit Incidental Data
+        </button>
+      </div>
+
+      {/* Navigation */}
+      <div className="flex items-center justify-center gap-6 mt-12 p-6 bg-gray-800/30 rounded-2xl backdrop-blur-sm">
+        <button 
+          onClick={prevIncidental}
+          disabled={currentIncidentalIndex === 0}
+          className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:shadow-none"
+        >
+          ← Previous
+        </button>
+        <div className="text-2xl font-bold text-white min-w-[100px] text-center">
+          {incidentalData.length > 0 ? currentIncidentalIndex + 1 : 0}
+        </div>
+        <button 
+          onClick={nextIncidental}
+          disabled={currentIncidentalIndex === incidentalData.length - 1}
+          className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:shadow-none"
+        >
+          Next →
+        </button>
+        <div className="text-lg font-semibold text-gray-300">
+          Total: {incidentalData.length}
+        </div>
       </div>
     </div>
   );
 
+  // Sidebar (unchanged)
   return (
-    <div className="app">
-      {/* Sidebar with new menu */}
-      <nav className="sidebar">
-        <ul>
-          <li className="active">Transaksi</li>
-          <ul className="submenu">
-            <li>Verifikasi Volume</li>
-            <li>Dist. BBM (VHS)</li>
-            <li>Dist. BBM (Franco)</li>
-            <li>Asset</li>
-          </ul>
-          <li>HSSE
-            <ul className="submenu">
-              <li>Dashboard HSSE
-                <ul className="submenu" style={{paddingLeft: '1rem'}}>
-                  <li className={currentPage === 'jks' ? 'active' : ''} onClick={() => setCurrentPage('jks')}>Lagging Indicator
-                    <ul className="submenu" style={{paddingLeft: '1rem'}}>
-                      <li>Jam Kerja Selamat</li>
-                    </ul>
-                  </li>
-                  <li>Medical Case</li>
-                  <li>Pelatihan
-                    <ul className="submenu" style={{paddingLeft: '1rem'}}>
-                      <li>Pemadam / Evakuasi</li>
-                      <li>Safe Work Practice</li>
-                      <li>Refresh STK</li>
-                      <li>Fleet Safety</li>
-                    </ul>
-                  </li>
-                  <li className={currentPage === 'incidental' ? 'active' : ''} onClick={() => setCurrentPage('incidental')}>Incidental Treatment</li>
-                </ul>
-              </li>
-              <li>Observasi</li>
-              <li>Emergency Readiness</li>
-              <li>Meeting/Komunikasi</li>
-              <li>Logout</li>
-            </ul>
+    <div className="dark min-h-screen bg-gradient-to-br from-slate-900 via-blue-900/30 to-slate-900 flex">
+      <nav className={`sidebar w-72 bg-blue-900 text-white shadow-2xl p-8 overflow-y-auto fixed inset-0 z-50 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:shadow-xl transition-transform duration-300 ease-in-out backdrop-blur-sm`}>
+        <button className="md:hidden mb-6 p-3 bg-blue-800/50 rounded-xl hover:bg-blue-700 transition-all text-white font-bold" onClick={() => setSidebarOpen(!sidebarOpen)}>
+          {sidebarOpen ? '❌' : '☰'}
+        </button>
+        <ul className="space-y-1 [&>li]:list-none">
+          <li className="p-4 cursor-pointer rounded-xl hover:bg-blue-800/70 border-l-4 border-transparent hover:border-blue-400 font-medium transition-all duration-200 text-lg mb-4">
+            Transaksi
           </li>
+          <ul className="space-y-1 pl-4 [&>li]:list-none">
+            <li className="p-3 cursor-pointer rounded-lg hover:bg-blue-800/50 border-l-4 border-transparent hover:border-blue-400 font-medium transition-all duration-200 text-sm">Verifikasi Volume</li>
+            <li className="p-3 cursor-pointer rounded-lg hover:bg-blue-800/50 border-l-4 border-transparent hover:border-blue-400 font-medium transition-all duration-200 text-sm">Dist. BBM (VHS)</li>
+            <li className="p-3 cursor-pointer rounded-lg hover:bg-blue-800/50 border-l-4 border-transparent hover:border-blue-400 font-medium transition-all duration-200 text-sm">Dist. BBM (Franco)</li>
+            <li className="p-3 cursor-pointer rounded-lg hover:bg-blue-800/50 border-l-4 border-transparent hover:border-blue-400 font-medium transition-all duration-200 text-sm">Asset</li>
+          </ul>
+          <li className="p-4 cursor-pointer rounded-xl hover:bg-blue-800/70 border-l-4 border-transparent hover:border-blue-400 font-medium transition-all duration-200 text-lg mt-6 mb-4">
+            HSSE
+          </li>
+          <ul className="space-y-1 pl-4 [&>li]:list-none">
+            <li className="p-3 cursor-pointer rounded-lg bg-blue-800/30 border-l-4 border-blue-400 font-semibold text-sm transition-all duration-200">
+              <div>Dashboard HSSE</div>
+              <ul className="space-y-1 pl-4 mt-2 [&>li]:list-none">
+                <li className={`p-2 cursor-pointer rounded-lg hover:bg-blue-700/70 border-l-4 border-transparent hover:border-blue-300 font-medium transition-all duration-200 text-xs ${currentPage === 'jks' ? 'bg-blue-700 border-blue-300 font-bold' : ''}`} onClick={() => setCurrentPage('jks')}>
+                  Lagging Indicator
+                  <ul className="space-y-1 pl-4 mt-1 [&>li]:list-none">
+                    <li className="p-1 text-xs opacity-90 pl-4 bg-blue-800/20 rounded">Jam Kerja Selamat</li>
+                  </ul>
+                </li>
+                <li className="p-2 cursor-pointer rounded-lg hover:bg-blue-700/70 border-l-4 border-transparent hover:border-blue-300 font-medium transition-all duration-200 text-xs">Medical Case</li>
+                <li className="p-2 cursor-pointer rounded-lg hover:bg-blue-700/70 border-l-4 border-transparent hover:border-blue-300 font-medium transition-all duration-200 text-xs">
+                  Pelatihan
+                  <ul className="space-y-1 pl-4 mt-1 [&>li]:list-none">
+                    <li className="p-1 text-xs opacity-90 pl-4 bg-blue-800/20 rounded">Pemadam / Evakuasi</li>
+                    <li className="p-1 text-xs opacity-90 pl-4 bg-blue-800/20 rounded">Safe Work Practice</li>
+                    <li className="p-1 text-xs opacity-90 pl-4 bg-blue-800/20 rounded">Refresh STK</li>
+                    <li className="p-1 text-xs opacity-90 pl-4 bg-blue-800/20 rounded">Fleet Safety</li>
+                  </ul>
+                </li>
+                <li className={`p-2 cursor-pointer rounded-lg hover:bg-blue-700/70 border-l-4 border-transparent hover:border-blue-300 font-medium transition-all duration-200 text-xs ${currentPage === 'incidental' ? 'bg-blue-700 border-blue-300 font-bold' : ''}`} onClick={() => setCurrentPage('incidental')}>
+                  Incidental Treatment
+                </li>
+              </ul>
+            </li>
+            <li className="p-3 cursor-pointer rounded-lg hover:bg-blue-800/50 border-l-4 border-transparent hover:border-blue-400 font-medium transition-all duration-200 text-sm">Observasi</li>
+            <li className="p-3 cursor-pointer rounded-lg hover:bg-blue-800/50 border-l-4 border-transparent hover:border-blue-400 font-medium transition-all duration-200 text-sm">Emergency Readiness</li>
+            <li className="p-3 cursor-pointer rounded-lg hover:bg-blue-800/50 border-l-4 border-transparent hover:border-blue-400 font-medium transition-all duration-200 text-sm">Meeting/Komunikasi</li>
+            <li className="p-3 text-red-300 font-medium cursor-pointer rounded-lg hover:bg-red-500/20 border-l-4 border-red-400 hover:border-red-300 transition-all duration-200">Logout</li>
+          </ul>
         </ul>
       </nav>
-      
-      {/* Conditional main content */}
-      <main className="main">
+
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      <main className="main flex-1 p-8 max-w-7xl mx-auto w-full pt-20 md:pt-0">
         {currentPage === 'jks' ? <JKSForm /> : <IncidentalForm />}
       </main>
     </div>

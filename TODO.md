@@ -1,11 +1,24 @@
-# HSSE Single-File App with Incidental Treatment
+# TODO: Add Submit/Delete/Pagination to JKS & Incidental Forms
 
-## TODO Steps:
-- [x] 1. JKS App.js created
-- [x] 2. Incidental Treatment page, sidebar nav, conditional render added
-- [x] 3. App.js updated, server hot-reload running
-- [x] 4. Fix ESLint warnings
-- [ ] 5. Attempt completion
+**Information Gathered:**
+- App.js: Full HSSE app w/ dashboard + JKS/Incidental forms
+- JKS form data: entitas, subEntitas, site, bulan, tahun, jumlahPekerjaOrganik, lemburOrganik, jksOrganik, tkjp, jksTkjp, jumlahPekerjaProject, lemburProject, jksProject
+- Incidental form data: tipeTreatment, entitasIt, subEntitasIt, siteIt, tanggal, kronologi, foto1Preview (store as URL or filename if needed)
+- Summary JKS: from current form inputs (live)
 
-**Status:** All complete. App fully functional with both JKS + Incidental Treatment forms, navigation, image preview.
+**Plan:**
+src/App.js (complete replace):
+- Add states: jksData[], currentJksIndex, incidentalData[], currentIncidentalIndex
+- useEffect localStorage load/save for each
+- Submit handlers: capture form state → push to array → reset form → save → index=0
+- Delete (X): remove current index → save → adjust index
+- Previous/Next buttons: change index → load data to form
+- UI: Add Submit btn bottom form, X btn top-right, nav "Previous [index+1] Next (Total: N)" 
+- Preserve ALL existing styling/logic/dashboard
+
+**Dependent:** None
+
+**Followup:** npm start test, verify independent pagination/localStorage
+
+Approve to proceed?
 
